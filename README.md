@@ -1,6 +1,6 @@
 # python_vue
 
-头条资讯全栈示例：FastAPI 后端 + Vue 3 前端。
+信息资讯全栈项目：python、FastAPI 后端 + Vue 3 前端。
 
 ## 目录
 
