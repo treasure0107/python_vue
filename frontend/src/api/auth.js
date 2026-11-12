@@ -1,6 +1,6 @@
 import { apiRequest } from './http'
 
-/** @returns {Promise<{ token: string, expires_at: string, user: object }>} */
+/** 登录：返回 data.token，由 persistAuthFromResponse 写入本地 */
 export function login({ username, password }) {
   return apiRequest('/auth/login', {
     method: 'POST',
@@ -9,19 +9,16 @@ export function login({ username, password }) {
 }
 
 /** @returns {Promise<{ token: string, expires_at: string, user: object }>} */
+/** 需 Bearer Token，请求头 Authorization: Bearer <token> */
 export function fetchCurrentUser() {
-  return apiRequest('/auth/me')
+  return apiRequest('/auth/me', { requireAuth: true })
 }
 
-export function register({ username, password, email, nickname }) {
+/** 注册：仅需用户名与密码，返回 { token, userInfo, expires_at? } */
+export function register({ username, password }) {
   return apiRequest('/auth/register', {
     method: 'POST',
-    body: {
-      username,
-      password,
-      email: email || undefined,
-      nickname: nickname || username,
-    },
+    body: { username, password },
   })
 }
 
@@ -30,6 +27,7 @@ export function updateProfile(body) {
   return apiRequest('/auth/profile', {
     method: 'PATCH',
     body,
+    requireAuth: true,
   })
 }
 
@@ -38,5 +36,6 @@ export function changePassword({ old_password, new_password }) {
   return apiRequest('/auth/password', {
     method: 'POST',
     body: { old_password, new_password },
+    requireAuth: true,
   })
 }

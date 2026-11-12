@@ -1,12 +1,15 @@
 """登录令牌 user_token：注册/登录成功后签发 Bearer token。"""
 
-import secrets
+import uuid
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.user_token import UserToken
+
+# 令牌有效期（天）
+TOKEN_EXPIRE_DAYS = 7
 
 
 def _utcnow() -> datetime:
@@ -14,16 +17,25 @@ def _utcnow() -> datetime:
     return datetime.now(timezone.utc)
 
 
+async def revoke_tokens_for_user(db: AsyncSession, user_id: int) -> None:
+    """删除某用户已有令牌，避免 user_token 表同一 user_id 多条记录。"""
+    await db.execute(delete(UserToken).where(UserToken.user_id == user_id))
+
+
 async def create_user_token(
     db: AsyncSession,
     user_id: int,
     *,
-    days: int = 7,
+    days: int = TOKEN_EXPIRE_DAYS,
 ) -> UserToken:
-    """为新注册用户或登录用户创建 token，默认有效期 7 天。"""
+    """
+    签发新令牌（UUID），有效期默认 7 天。
+    同一用户先撤销旧令牌再入库，保证每名用户仅一条记录。
+    """
+    await revoke_tokens_for_user(db, user_id)
     row = UserToken(
         user_id=user_id,
-        token=secrets.token_urlsafe(48),
+        token=str(uuid.uuid4()),
         expires_at=_utcnow() + timedelta(days=days),
     )
     db.add(row)

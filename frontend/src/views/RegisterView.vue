@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import { register } from '../api/auth'
-import { saveAuth } from '../utils/session'
+import { persistAuthFromResponse } from '../utils/session'
 import AuthField from '../components/AuthField.vue'
 import AuthLayout from '../components/AuthLayout.vue'
 
@@ -33,14 +33,9 @@ async function onSubmit() {
     const data = await register({
       username: name,
       password: password.value,
-      nickname: name,
     })
-    saveAuth({
-      token: data.token,
-      expiresAt: data.expires_at,
-      user: data.user,
-    })
-    emit('success', data.user)
+    const user = persistAuthFromResponse(data)
+    emit('success', user)
   } catch (e) {
     error.value = e.message || '注册失败'
   } finally {

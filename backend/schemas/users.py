@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
 
 
 class UserBase(BaseModel):
@@ -12,6 +12,23 @@ class UserBase(BaseModel):
     avatar: str | None = Field(default=None, max_length=512)
     bio: str | None = Field(default=None, max_length=512)
     email: EmailStr | None = None
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def empty_email_as_none(cls, value):
+        if value is None or value == "":
+            return None
+        return value
+
+    @model_validator(mode="before")
+    @classmethod
+    def blank_optional_strings(cls, data):
+        if not isinstance(data, dict):
+            return data
+        for key in ("nickname", "avatar", "bio", "email"):
+            if data.get(key) == "":
+                data[key] = None
+        return data
 
 
 class UserCreate(UserBase):
@@ -29,6 +46,23 @@ class UserUpdate(BaseModel):
     email: EmailStr | None = None
     password: str | None = Field(default=None, min_length=6, max_length=128)
     is_active: bool | None = None
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def empty_email_as_none(cls, value):
+        if value is None or value == "":
+            return None
+        return value
+
+    @model_validator(mode="before")
+    @classmethod
+    def blank_optional_strings(cls, data):
+        if not isinstance(data, dict):
+            return data
+        for key in ("username", "nickname", "avatar", "bio", "email"):
+            if data.get(key) == "":
+                data[key] = None
+        return data
 
 
 class ProfileUpdateRequest(BaseModel):

@@ -10,7 +10,6 @@ import AiChatView from './views/AiChatView.vue'
 import MineView from './views/MineView.vue'
 import LoginView from './views/LoginView.vue'
 import RegisterView from './views/RegisterView.vue'
-import UserProfileView from './views/UserProfileView.vue'
 import ChangePasswordView from './views/ChangePasswordView.vue'
 import AllCategoriesView from './views/AllCategoriesView.vue'
 import { fetchCurrentUser } from './api/auth'
@@ -18,7 +17,7 @@ import { clearAuth, getStoredUser, loadAuth, saveAuth } from './utils/session'
 
 const activeTab = ref('home')
 const authScreen = ref(null)
-/** @type {import('vue').Ref<null | 'profile' | 'password'>} */
+/** @type {import('vue').Ref<null | 'password'>} */
 const mineScreen = ref(null)
 const currentUser = ref(getStoredUser())
 const tabTitles = {
@@ -27,14 +26,12 @@ const tabTitles = {
   mine: '我的',
   login: '用户登录',
   register: '用户注册',
-  profile: '个人信息',
   password: '修改密码',
 }
 
 const pageTitle = computed(() => {
   if (activeTab.value === 'mine' && authScreen.value === 'login') return tabTitles.login
   if (activeTab.value === 'mine' && authScreen.value === 'register') return tabTitles.register
-  if (activeTab.value === 'mine' && mineScreen.value === 'profile') return tabTitles.profile
   if (activeTab.value === 'mine' && mineScreen.value === 'password') return tabTitles.password
   return tabTitles[activeTab.value] || '新闻资讯'
 })
@@ -255,6 +252,9 @@ watch(activeTab, (tab) => {
   if (tab === 'home' && activeCategory.value && !newsList.value.length && !loading.value) {
     loadNews()
   }
+  if (tab === 'mine' && loadAuth()?.token) {
+    syncCurrentUserProfile().catch(() => {})
+  }
 })
 
 function openLogin() {
@@ -298,12 +298,10 @@ async function onLoginSuccess() {
   try {
     await syncCurrentUserProfile()
   } catch {
-    /* 仍沿用登录返回的 user */
+    const saved = loadAuth()
+    if (saved?.user) currentUser.value = saved.user
   }
   closeAuth()
-  activeTab.value = 'home'
-  activeCategory.value = resolveDefaultCategory()
-  loadNews()
 }
 
 async function onRegisterSuccess() {
@@ -321,11 +319,6 @@ function onLogout() {
   mineScreen.value = null
 }
 
-function openProfile() {
-  if (!currentUser.value) return
-  mineScreen.value = 'profile'
-}
-
 function closeMineSubScreen() {
   mineScreen.value = null
 }
@@ -334,12 +327,8 @@ function openChangePassword() {
   mineScreen.value = 'password'
 }
 
-function onProfileUpdated(user) {
-  currentUser.value = user
-}
-
 function onPasswordChanged() {
-  mineScreen.value = 'profile'
+  mineScreen.value = null
 }
 
 async function restoreSession() {
@@ -387,7 +376,11 @@ onUnmounted(() => {
           @more="openAllCategories"
         />
       </header>
-      <main ref="contentRef" class="news-app__content">
+      <main
+        ref="contentRef"
+        class="news-app__content"
+        :class="{ 'news-app__content--mine': activeTab === 'mine' && !authScreen && !mineScreen }"
+      >
       <template v-if="activeTab === 'home'">
         <p v-if="loading && !newsList.length" class="news-app__hint">加载中...</p>
         <p v-else-if="error && !newsList.length" class="news-app__hint news-app__hint--error">
@@ -429,19 +422,14 @@ onUnmounted(() => {
         @back="closeMineSubScreen"
         @success="onPasswordChanged"
       />
-      <UserProfileView
-        v-else-if="activeTab === 'mine' && mineScreen === 'profile'"
-        @back="closeMineSubScreen"
-        @change-password="openChangePassword"
-        @updated="onProfileUpdated"
-      />
       <MineView
         v-else-if="activeTab === 'mine'"
+        class="news-app__mine"
         :user="currentUser"
         @login="openLogin"
         @register="openRegister"
         @logout="onLogout"
-        @profile="openProfile"
+        @change-password="openChangePassword"
       />
       </main>
     </template>
@@ -500,5 +488,15 @@ onUnmounted(() => {
 .news-app__hint--more {
   text-align: center;
   padding-bottom: 0.5rem;
+}
+
+.news-app__content--mine {
+  display: flex;
+  flex-direction: column;
+}
+
+:deep(.news-app__mine) {
+  flex: 1;
+  width: 100%;
 }
 </style>

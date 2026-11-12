@@ -15,7 +15,7 @@ async def list_users(
 ):
     users = await user_crud.get_users(db, skip=skip, limit=limit)
     return success(
-        [UserOut.model_validate(u) for u in users],
+        [user_crud.user_to_out(u) for u in users],
         message="获取用户列表成功",
     )
 
@@ -25,17 +25,17 @@ async def get_user(user_id: int, db: AsyncSession = Depends(get_db)):
     db_user = await user_crud.get_user(db, user_id)
     if not db_user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="用户不存在")
-    return success(UserOut.model_validate(db_user), message="获取用户成功")
+    return success(user_crud.user_to_out(db_user), message="获取用户成功")
 
 
-@router.post("", response_model=ApiResponse[UserOut], status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=ApiResponse[UserOut])
 async def create_user(user_in: UserCreate, db: AsyncSession = Depends(get_db)):
     if await user_crud.get_user_by_username(db, user_in.username):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="用户名已存在")
     if user_in.email and await user_crud.get_user_by_email(db, str(user_in.email)):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="邮箱已注册")
     user = await user_crud.create_user(db, user_in)
-    return success(UserOut.model_validate(user), message="创建用户成功", code=201)
+    return success(user_crud.user_to_out(user), message="创建用户成功", code=200)
 
 
 @router.put("/{user_id}", response_model=ApiResponse[UserOut])
@@ -46,7 +46,7 @@ async def update_user(
     if not db_user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="用户不存在")
     updated = await user_crud.update_user(db, db_user, user_in)
-    return success(UserOut.model_validate(updated), message="更新用户成功")
+    return success(user_crud.user_to_out(updated), message="更新用户成功")
 
 
 @router.delete("/{user_id}", response_model=ApiResponse[None])

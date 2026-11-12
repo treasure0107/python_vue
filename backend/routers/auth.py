@@ -8,7 +8,12 @@ from crud import auth as auth_crud
 from crud import users as user_crud
 from dependencies.auth import get_current_user
 from models.users import User
-from schemas.auth import AuthResponse, LoginRequest, RegisterRequest
+from schemas.auth import (
+    AuthResponse,
+    LoginRequest,
+    RegisterRequest,
+    RegisterResponseData,
+)
 from schemas.response import ApiResponse, success
 from schemas.users import (
     ChangePasswordRequest,
@@ -21,13 +26,13 @@ router = APIRouter(prefix="/auth", tags=["认证"])
 
 @router.post(
     "/register",
-    response_model=ApiResponse[AuthResponse],
-    status_code=201,
+    response_model=ApiResponse[RegisterResponseData],
+    status_code=200,
 )
 async def register(body: RegisterRequest, db: AsyncSession = Depends(get_db)):
-    """POST /auth/register — 注册并返回令牌。"""
+    """POST /auth/register — 查重、入库、签发令牌，返回 token 与 userInfo。"""
     data = await auth_crud.register_user(db, body)
-    return success(data, message="注册成功", code=201)
+    return success(data, message="注册成功", code=200)
 
 
 @router.post("/login", response_model=ApiResponse[AuthResponse])

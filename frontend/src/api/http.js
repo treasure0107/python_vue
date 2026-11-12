@@ -1,4 +1,4 @@
-import { getToken } from '../utils/session'
+import { authorizationHeader, clearAuth, getToken } from '../utils/session'
 
 function parseErrorBody(bodyText, httpStatus) {
   if (!bodyText) return `请求失败 ${httpStatus}`
@@ -32,25 +32,43 @@ function unwrapApiPayload(payload) {
   return payload
 }
 
+/**
+ * 统一请求：若本地有 token，自动附加请求头 `Authorization: Bearer <token>`
+ * @param {string} path 相对 /api 的路径
+ * @param {object} [options]
+ * @param {boolean} [options.requireAuth] 为 true 且无 token 时直接报错
+ */
 export async function apiRequest(path, options = {}) {
-  const headers = {
-    Accept: 'application/json',
-    ...options.headers,
+  const { requireAuth = false, ...fetchOptions } = options
+
+  if (requireAuth && !getToken()) {
+    throw new Error('请先登录')
   }
 
-  let body = options.body
-  if (body !== undefined && body !== null && typeof body === 'object' && !(body instanceof FormData)) {
+  const headers = {
+    Accept: 'application/json',
+    ...authorizationHeader(),
+    ...fetchOptions.headers,
+  }
+
+  let body = fetchOptions.body
+  if (
+    body !== undefined &&
+    body !== null &&
+    typeof body === 'object' &&
+    !(body instanceof FormData)
+  ) {
     headers['Content-Type'] = 'application/json'
     body = JSON.stringify(body)
   }
 
-  const token = getToken()
-  if (token) {
-    headers.Authorization = `Bearer ${token}`
-  }
-
-  const res = await fetch(`/api${path}`, { ...options, headers, body })
+  const res = await fetch(`/api${path}`, { ...fetchOptions, headers, body })
   const text = await res.text()
+
+  if (res.status === 401) {
+    clearAuth()
+    throw new Error(parseErrorBody(text, 401) || '登录已失效，请重新登录')
+  }
 
   if (!res.ok) {
     throw new Error(parseErrorBody(text, res.status))

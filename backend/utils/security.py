@@ -1,23 +1,22 @@
-"""密码哈希与校验（bcrypt，兼容既有 passlib 生成的哈希）。"""
+"""
+密码工具兼容入口。
 
-import bcrypt
+推荐：
+    from utils.password import get_password_hash, verify_password
+或：
+    from utils.security import hash_password, verify_password
+"""
 
+from utils.password import (
+    get_password_hash,
+    hash_password,
+    pwd_context,
+    verify_password,
+)
 
-def hash_password(plain_password: str) -> str:
-    """注册/改密时对明文密码做 bcrypt 哈希。"""
-    salt = bcrypt.gensalt()
-    digest = bcrypt.hashpw(plain_password.encode("utf-8"), salt)
-    return digest.decode("utf-8")
-
-
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """校验明文与库中 hashed_password 是否匹配。"""
-    if not plain_password or not hashed_password:
-        return False
-    try:
-        return bcrypt.checkpw(
-            plain_password.encode("utf-8"),
-            hashed_password.encode("utf-8"),
-        )
-    except (ValueError, TypeError):
-        return False
+__all__ = [
+    "pwd_context",
+    "get_password_hash",
+    "hash_password",
+    "verify_password",
+]

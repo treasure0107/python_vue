@@ -15,11 +15,26 @@
 
 ---
 
+## Token 认证（无状态 HTTP）
+
+1. **登录 / 注册** → 后端签发 token（**有效期 7 天**），先删除该用户旧令牌再写入，**每个 `user_id` 仅保留一条**，在 `data.token` 返回  
+2. **前端** 将 token 存 localStorage（`toutiao_auth`）  
+3. **后续请求** 在请求头携带：`Authorization: Bearer <token>`  
+4. **需登录的接口** 通过 `get_current_user` 查库校验 token 是否有效、未过期  
+
+| 项 | 说明 |
+|----|------|
+| Header | `Authorization` |
+| 类型 | `Bearer`（持有者令牌） |
+| 凭证 | `<token>` 字符串（注册/登录返回的 `data.token`） |
+
+---
+
 ## 认证 `routers/auth.py`
 
 | 方法 | 路径 | 说明 | data 类型 |
 |------|------|------|-----------|
-| POST | `/auth/register` | 注册并返回令牌 | `AuthResponse` |
+| POST | `/auth/register` | 注册：查重→bcrypt 入库→UUID 令牌 | `RegisterResponseData`（`token`、`userInfo`） |
 | POST | `/auth/login` | 登录 | `AuthResponse` |
 | GET | `/auth/me` | 当前用户个人信息（Bearer） | `UserProfileOut`（含 `account_id`、`bio`） |
 | PATCH | `/auth/profile` | 更新昵称/头像/简介 | `UserProfileOut` |

@@ -1,6 +1,10 @@
+import logging
+
 from fastapi import HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+
+logger = logging.getLogger(__name__)
 
 
 def _as_message(detail) -> str:
@@ -39,6 +43,21 @@ async def validation_exception_handler(
         content={
             "code": 422,
             "message": _as_message(exc.errors()),
+            "data": None,
+        },
+    )
+
+
+async def unhandled_exception_handler(
+    _request: Request, exc: Exception
+) -> JSONResponse:
+    """未捕获异常：记录日志并返回统一 JSON，避免 Swagger 只显示纯文本堆栈。"""
+    logger.exception("Unhandled error: %s", exc)
+    return JSONResponse(
+        status_code=500,
+        content={
+            "code": 500,
+            "message": "服务器内部错误，请查看后端日志",
             "data": None,
         },
     )
