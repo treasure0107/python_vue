@@ -1,0 +1,36 @@
+/* 移动端 H5 基础（375 设计稿等比根字号，上限约 480px 宽屏） */
+html {
+  font-size: calc(100vw / 375 * 16px);
+  font-size: clamp(14px, calc(100vw / 375 * 16px), 20.48px);
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+html,
+body {
+  width: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+body {
+  background: var(--color-bg);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#app {
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+button:active {
+  opacity: 0.85;
+}

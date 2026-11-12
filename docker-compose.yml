@@ -1,0 +1,33 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: toutiao-backend
+    environment:
+      DATABASE_URL: sqlite:////data/toutiao.db
+      DEBUG: "false"
+    volumes:
+      - backend-data:/data
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8000/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: toutiao-frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  backend-data:

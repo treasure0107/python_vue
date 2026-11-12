@@ -1,0 +1,65 @@
+@baseUrl = http://127.0.0.1:8000
+@api = {{baseUrl}}/api
+
+### 根路径
+GET {{baseUrl}}/
+
+### 注册
+POST {{api}}/auth/register
+Content-Type: application/json
+
+{
+  "username": "demo",
+  "password": "123456",
+  "nickname": "演示用户",
+  "email": "demo@example.com"
+}
+
+### 登录（默认 admin / 123456）
+POST {{api}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "123456"
+}
+
+### 创建用户（管理接口）
+POST {{api}}/users
+Content-Type: application/json
+
+{
+  "username": "demo2",
+  "email": "demo2@example.com",
+  "password": "123456"
+}
+
+### 用户列表
+GET {{api}}/users
+
+### 创建资讯
+POST {{api}}/news
+Content-Type: application/json
+
+{
+  "title": "今日头条第一条",
+  "summary": "摘要内容",
+  "content": "正文内容",
+  "category": "推荐",
+  "cover_url": null,
+  "author_id": 1
+}
+
+### 分类导航（统一响应 code/message/data）
+GET {{api}}/news/categories
+
+# 成功示例: { "code": 200, "message": "获取新闻分类成功", "data": ["头条", ...] }
+
+### 资讯列表（推荐）
+GET {{api}}/news/list?categoryId=1&page=1&pageSize=10
+
+### 旧版列表
+GET {{api}}/news?category=推荐&skip=0&limit=10
+
+### 资讯详情
+GET {{api}}/news/1

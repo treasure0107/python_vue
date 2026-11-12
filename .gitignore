@@ -1,0 +1,30 @@
+# Python / 后端依赖与缓存
+.venv/
+venv/
+backend/.venv/
+backend/venv/
+**/__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# 前端依赖与构建产物
+frontend/node_modules/
+node_modules/
+frontend/dist/
+frontend/dist-ssr/
+
+# 环境与敏感信息
+.env
+.env.*
+!.env.example
+
+# IDE / 系统
+.idea/
+.vscode/
+*.log
+*.db
+
+# Cursor / 本地工具输出
+agent-tools/
+terminals/
