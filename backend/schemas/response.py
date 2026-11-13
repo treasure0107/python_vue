@@ -1,3 +1,5 @@
+"""统一响应外壳类型（OpenAPI / response_model 用）；构造逻辑见 utils.response。"""
+
 from typing import Generic, TypeVar
 
 from pydantic import BaseModel, Field
@@ -13,15 +15,12 @@ class ApiResponse(BaseModel, Generic[T]):
     data: T | None = None
 
 
-def success(
-    data: T | None = None,
-    *,
-    message: str = "操作成功",
-    code: int = 200,
-) -> dict:
-    return {"code": code, "message": message, "data": data}
-
-
 def fail_message(message: str, *, code: int = 400) -> str:
     """供 HTTPException detail 使用（由全局处理器转为统一 JSON）。"""
     return message
+
+
+# 兼容旧导入路径
+from utils.response import success  # noqa: E402
+
+__all__ = ["ApiResponse", "fail_message", "success"]

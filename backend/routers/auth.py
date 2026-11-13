@@ -14,7 +14,8 @@ from schemas.auth import (
     RegisterRequest,
     RegisterResponseData,
 )
-from schemas.response import ApiResponse, success
+from schemas.response import ApiResponse
+from utils.response import success
 from schemas.users import (
     ChangePasswordRequest,
     ProfileUpdateRequest,

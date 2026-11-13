@@ -3,7 +3,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from config.db_conf import get_db
 from crud import users as user_crud
-from schemas.response import ApiResponse, success
+from schemas.response import ApiResponse
+from utils.response import success
 from schemas.users import UserCreate, UserOut, UserUpdate
 
 router = APIRouter(prefix="/users", tags=["用户"])

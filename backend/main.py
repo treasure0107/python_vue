@@ -1,7 +1,6 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException
-from fastapi.exceptions import RequestValidationError
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from config.db_conf import AsyncSessionLocal, Base, engine, settings
@@ -10,11 +9,7 @@ import models  # noqa: F401
 from routers import auth as auth_router
 from routers import news as news_router
 from routers import users as users_router
-from utils.exception_handlers import (
-    http_exception_handler,
-    unhandled_exception_handler,
-    validation_exception_handler,
-)
+from utils.exception_handlers import register_exception_handlers
 from utils.redis_cache import close_redis
 
 
@@ -34,9 +29,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title=settings.app_title, debug=settings.debug, lifespan=lifespan)
 
-app.add_exception_handler(HTTPException, http_exception_handler)
-app.add_exception_handler(RequestValidationError, validation_exception_handler)
-app.add_exception_handler(Exception, unhandled_exception_handler)
+register_exception_handlers(app)
 #允许的来源(可以是域名列表)
 origins = [
     "http://localhost",

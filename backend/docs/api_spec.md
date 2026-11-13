@@ -12,6 +12,7 @@
 ```
 
 - 失败：`code` 与 HTTP 状态一致，`data` 为 `null`，`message` 为错误说明。
+- 实现：`utils/response.py`（`ApiResponseFactory.success` / `success_response`），路由声明 `response_model=ApiResponse[某 schemas 模型]`，各接口 `data` 类型见对应 `schemas/*.py`。
 
 ---
 

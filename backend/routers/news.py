@@ -8,7 +8,8 @@ from crud import news as news_crud
 from crud import news_category as category_crud
 from schemas.news import NewsCreate, NewsDetailData, NewsListPageData, NewsOut, NewsUpdate
 from schemas.news_category import NewsCategoryOut
-from schemas.response import ApiResponse, success
+from schemas.response import ApiResponse
+from utils.response import success
 
 router = APIRouter(prefix="/news", tags=["资讯"])
 

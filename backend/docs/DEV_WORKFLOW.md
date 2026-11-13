@@ -15,5 +15,7 @@
    - 缓存读写：`crud/news_cache.py`（Redis，供 crud 业务方法调用）
 
 4. **路由调 crud 并响应**  
-   - 统一出参：`schemas/response.py` → `{ "code", "message", "data" }`  
-   - 统一异常：`utils/exception_handlers.py`
+   - 类型外壳：`schemas/response.py` → `ApiResponse[T]`（OpenAPI）  
+   - 构造工厂：`utils/response.py` → `success()` / `ApiResponseFactory`  
+   - 业务 data：各类 `schemas/*.py`（`ConfigDict(from_attributes=True)`）  
+   - 统一异常：`utils/exception_handlers.py` → `register_exception_handlers(app)`（HTTP / 422 / IntegrityError / SQLAlchemy / 兜底）

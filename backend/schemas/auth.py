@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
 
 from schemas.users import UserOut
 
@@ -43,6 +43,8 @@ class RegisterRequest(BaseModel):
 class RegisterUserInfo(BaseModel):
     """注册成功返回的用户摘要（与产品稿 userInfo 一致）。"""
 
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     username: str
     bio: str | None = None
@@ -50,7 +52,9 @@ class RegisterUserInfo(BaseModel):
 
 
 class RegisterResponseData(BaseModel):
-    """注册成功 data：访问令牌 + userInfo。"""
+    """注册成功 data：访问令牌 + userInfo（对应课件 UserAuthResponse）。"""
+
+    model_config = ConfigDict(populate_by_name=True)
 
     token: str
     userInfo: RegisterUserInfo
@@ -59,6 +63,8 @@ class RegisterResponseData(BaseModel):
 
 class AuthResponse(BaseModel):
     """登录成功后的 data 结构。"""
+
+    model_config = ConfigDict(from_attributes=True)
 
     token: str
     expires_at: datetime
