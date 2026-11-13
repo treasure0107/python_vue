@@ -7,6 +7,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.user_token import UserToken
+from models.users import User
 
 # 令牌有效期（天）
 TOKEN_EXPIRE_DAYS = 7
@@ -46,13 +47,28 @@ async def create_user_token(
 
 async def get_valid_token(db: AsyncSession, token: str) -> UserToken | None:
     """校验 token 是否存在且未过期，供 get_current_user 使用。"""
-    result = await db.execute(select(UserToken).where(UserToken.token == token))
-    row = result.scalar_one_or_none()
+    pair = await get_valid_token_with_user(db, token)
+    return pair[0] if pair else None
+
+
+async def get_valid_token_with_user(
+    db: AsyncSession, token: str
+) -> tuple[UserToken, User] | None:
+    """一次查询返回有效 token 与对应用户（减少鉴权往返）。"""
+    result = await db.execute(
+        select(UserToken, User)
+        .join(User, User.id == UserToken.user_id)
+        .where(UserToken.token == token)
+    )
+    row = result.one_or_none()
     if row is None:
         return None
-    expires = row.expires_at
+    token_row, user = row
+    expires = token_row.expires_at
     if expires.tzinfo is None:
         expires = expires.replace(tzinfo=timezone.utc)
     if expires < _utcnow():
         return None
-    return row
+    if not user.is_active:
+        return None
+    return token_row, user

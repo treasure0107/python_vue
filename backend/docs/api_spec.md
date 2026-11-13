@@ -54,10 +54,21 @@
 | GET | `/news/categories` | 分类列表 | `NewsCategoryOut[]`（id、name、sort_order、created_at、updated_at） |
 | GET | `/news/list` | 列表 `?categoryId=&page=&pageSize=`（pageSize≤100） | `NewsListPageData` |
 | GET | `/news` | 旧版列表 `?category=&skip=&limit=` | `NewsOut[]` |
-| GET | `/news/{id}` | 详情（浏览量+1，含同分类相关推荐） | `NewsDetailData`（`views`、`relatedNews` 等） |
+| GET | `/news/{id}` | 详情（浏览量+1，含相关推荐；登录时带 `isFavorited`） | `NewsDetailData` |
 | POST | `/news` | 创建 | `NewsOut`（code 201） |
 | PUT | `/news/{id}` | 更新 | `NewsOut` |
 | DELETE | `/news/{id}` | 删除 | `null` |
+
+---
+
+## 收藏 `routers/favorite.py`（需 Bearer）
+
+| 方法 | 路径 | 说明 | data |
+|------|------|------|------|
+| GET | `/favorites` | 我的收藏列表 | `FavoriteListItem[]` |
+| POST | `/favorites/{news_id}` | 切换收藏 | `FavoriteToggleData` |
+| DELETE | `/favorites/{news_id}` | 取消单条 | `null` |
+| DELETE | `/favorites` | 清空 | `FavoriteClearData` |
 
 ---
 
@@ -80,3 +91,4 @@
 | `auth` | `crud/auth.py`, `crud/users.py`, `crud/user_token.py` |
 | `news` | `crud/news.py`, `crud/news_category.py`, `crud/news_cache.py` |
 | `users` | `crud/users.py` |
+| `favorites` | `crud/favorite.py` |

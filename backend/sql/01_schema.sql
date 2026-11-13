@@ -69,7 +69,9 @@ CREATE TABLE IF NOT EXISTS `favorite` (
   `news_id` INT NOT NULL,
   `created_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uq_favorite_user_news` (`user_id`, `news_id`),
+  UNIQUE KEY `user_news_unique` (`user_id`, `news_id`),
+  KEY `fk_favorite_user_idx` (`user_id`),
+  KEY `fk_favorite_news_idx` (`news_id`),
   CONSTRAINT `fk_favorite_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_favorite_news` FOREIGN KEY (`news_id`) REFERENCES `news` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

@@ -76,6 +76,8 @@ def _integrity_message(error_msg: str) -> str:
             return "邮箱已注册"
         if "token" in lower:
             return "令牌冲突，请重新登录"
+        if "favorite" in lower or "user_news_unique" in lower or "uq_favorite_user_news" in lower:
+            return "该资讯已收藏，请勿重复收藏"
         return "数据已存在，请勿重复提交"
     if "foreign key" in lower:
         return "关联数据不存在"

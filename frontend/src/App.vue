@@ -11,13 +11,14 @@ import MineView from './views/MineView.vue'
 import LoginView from './views/LoginView.vue'
 import RegisterView from './views/RegisterView.vue'
 import ChangePasswordView from './views/ChangePasswordView.vue'
+import FavoritesView from './views/FavoritesView.vue'
 import AllCategoriesView from './views/AllCategoriesView.vue'
 import { fetchCurrentUser } from './api/auth'
 import { clearAuth, getStoredUser, loadAuth, saveAuth } from './utils/session'
 
 const activeTab = ref('home')
 const authScreen = ref(null)
-/** @type {import('vue').Ref<null | 'password'>} */
+/** @type {import('vue').Ref<null | 'password' | 'favorites'>} */
 const mineScreen = ref(null)
 const currentUser = ref(getStoredUser())
 const tabTitles = {
@@ -27,14 +28,18 @@ const tabTitles = {
   login: '用户登录',
   register: '用户注册',
   password: '修改密码',
+  favorites: '我的收藏',
 }
 
 const pageTitle = computed(() => {
   if (activeTab.value === 'mine' && authScreen.value === 'login') return tabTitles.login
   if (activeTab.value === 'mine' && authScreen.value === 'register') return tabTitles.register
   if (activeTab.value === 'mine' && mineScreen.value === 'password') return tabTitles.password
+  if (activeTab.value === 'mine' && mineScreen.value === 'favorites') return tabTitles.favorites
   return tabTitles[activeTab.value] || '新闻资讯'
 })
+
+const isLoggedIn = computed(() => Boolean(currentUser.value && loadAuth()?.token))
 
 const showAllCategories = ref(false)
 
@@ -327,6 +332,31 @@ function openChangePassword() {
   mineScreen.value = 'password'
 }
 
+function openFavorites() {
+  if (!isLoggedIn.value) {
+    openLogin()
+    return
+  }
+  mineScreen.value = 'favorites'
+}
+
+function onDetailNeedLogin() {
+  activeTab.value = 'mine'
+  openLogin()
+}
+
+function onFavoriteChange({ favorited }) {
+  if (detailArticle.value) {
+    detailArticle.value = { ...detailArticle.value, isFavorited: favorited }
+  }
+}
+
+function openNewsFromFavorites(newsId) {
+  activeTab.value = 'home'
+  mineScreen.value = null
+  openDetail(newsId)
+}
+
 function onPasswordChanged() {
   mineScreen.value = null
 }
@@ -422,6 +452,11 @@ onUnmounted(() => {
         @back="closeMineSubScreen"
         @success="onPasswordChanged"
       />
+      <FavoritesView
+        v-else-if="activeTab === 'mine' && mineScreen === 'favorites'"
+        @back="closeMineSubScreen"
+        @open-news="openNewsFromFavorites"
+      />
       <MineView
         v-else-if="activeTab === 'mine'"
         class="news-app__mine"
@@ -430,6 +465,7 @@ onUnmounted(() => {
         @register="openRegister"
         @logout="onLogout"
         @change-password="openChangePassword"
+        @favorites="openFavorites"
       />
       </main>
     </template>
@@ -438,8 +474,11 @@ onUnmounted(() => {
       v-if="detailVisible && activeTab === 'home' && !showAllCategories"
       :article="detailArticle"
       :loading="detailLoading"
+      :logged-in="isLoggedIn"
       @close="closeDetail"
       @open-related="openDetail"
+      @need-login="onDetailNeedLogin"
+      @favorite-change="onFavoriteChange"
     />
   </div>
 </template>

@@ -6,7 +6,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from config.db_conf import get_db
 from crud import user_token as token_crud
-from crud import users as user_crud
 from models.users import User
 
 # Bearer 持有者令牌（与前端 Authorization: Bearer <token> 对应）
@@ -40,11 +39,22 @@ async def get_current_user(
     if credentials.scheme.lower() != "bearer":
         raise _unauthorized("Authorization 须为 Bearer 类型")
 
-    token_row = await token_crud.get_valid_token(db, credentials.credentials)
-    if token_row is None:
+    pair = await token_crud.get_valid_token_with_user(db, credentials.credentials)
+    if pair is None:
         raise _unauthorized("令牌无效或已过期")
+    _token_row, user = pair
+    return user
 
-    user = await user_crud.get_user(db, token_row.user_id)
-    if user is None or not user.is_active:
-        raise _unauthorized("用户不存在或已禁用")
+
+async def get_optional_user(
+    credentials: HTTPAuthorizationCredentials | None = Depends(_bearer),
+    db: AsyncSession = Depends(get_db),
+) -> User | None:
+    """可选登录：无 token 或无效时返回 None，不抛 401。"""
+    if credentials is None or credentials.scheme.lower() != "bearer":
+        return None
+    pair = await token_crud.get_valid_token_with_user(db, credentials.credentials)
+    if pair is None:
+        return None
+    _token_row, user = pair
     return user

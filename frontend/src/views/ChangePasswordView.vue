@@ -42,8 +42,9 @@ async function onSubmit() {
 
 <template>
   <section class="pwd">
-    <button type="button" class="pwd__back" @click="emit('back')">‹ 返回</button>
-    <h1 class="pwd__title">修改密码</h1>
+    <header class="pwd__header">
+      <button type="button" class="pwd__back" @click="emit('back')">‹ 返回</button>
+    </header>
     <p class="pwd__tip">保存后请使用新密码重新登录。</p>
 
     <form class="pwd__card" @submit.prevent="onSubmit">
@@ -78,24 +79,21 @@ async function onSubmit() {
 
 <style scoped>
 .pwd {
-  padding: 0.25rem 0 1.5rem;
+  padding: 0 0 1.5rem;
+}
+
+.pwd__header {
+  padding: 8px 0 12px;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .pwd__back {
-  margin-bottom: 0.5rem;
   font-size: 1rem;
   color: var(--color-primary);
 }
 
-.pwd__title {
-  margin: 0 0 0.5rem;
-  font-size: 1.25rem;
-  font-weight: 600;
-  text-align: center;
-}
-
 .pwd__tip {
-  margin: 0 0 1rem;
+  margin: 1rem 0 1rem;
   font-size: 0.8125rem;
   text-align: center;
   color: var(--color-text-secondary);

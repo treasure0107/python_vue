@@ -1,5 +1,6 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { toggleFavorite } from '../api/favorites'
 
 const props = defineProps({
   article: {
@@ -7,9 +8,24 @@ const props = defineProps({
     default: null,
   },
   loading: Boolean,
+  loggedIn: {
+    type: Boolean,
+    default: false,
+  },
 })
 
-defineEmits(['close', 'open-related'])
+const emit = defineEmits(['close', 'open-related', 'need-login', 'favorite-change'])
+
+const favorited = ref(false)
+const favoriteBusy = ref(false)
+
+watch(
+  () => props.article?.isFavorited,
+  (val) => {
+    favorited.value = Boolean(val)
+  },
+  { immediate: true },
+)
 
 const readCount = computed(
   () => props.article?.views ?? props.article?.view_count ?? 0,
@@ -26,12 +42,35 @@ const timeText = computed(() => {
   if (Number.isNaN(d.getTime())) return props.article.created_at
   return d.toLocaleString('zh-CN', { hour12: false })
 })
+
+async function onFavoriteClick() {
+  if (!props.article?.id) return
+  if (!props.loggedIn) {
+    emit('need-login')
+    return
+  }
+  if (favoriteBusy.value) return
+  favoriteBusy.value = true
+  try {
+    const result = await toggleFavorite(props.article.id)
+    favorited.value = Boolean(result?.favorited)
+    emit('favorite-change', {
+      newsId: props.article.id,
+      favorited: favorited.value,
+    })
+  } catch (e) {
+    window.alert(e.message || '操作失败')
+  } finally {
+    favoriteBusy.value = false
+  }
+}
 </script>
 
 <template>
   <div class="detail" aria-modal="true" role="dialog">
     <header class="detail__header">
       <button type="button" class="detail__back" @click="$emit('close')">‹ 返回</button>
+      <span class="detail__header-title">新闻详情</span>
     </header>
     <div class="detail__scroll">
       <p v-if="loading" class="detail__loading">加载中...</p>
@@ -40,7 +79,19 @@ const timeText = computed(() => {
         <div class="detail__meta">
           <span>{{ article.source || '头条资讯' }}</span>
           <span>{{ timeText }}</span>
-          <span>{{ readCount }} 阅读</span>
+          <span class="detail__meta-views">
+            <span>{{ readCount }} 阅读</span>
+            <button
+              type="button"
+              class="detail__star detail__star--inline"
+              :class="{ 'detail__star--on': favorited }"
+              :disabled="favoriteBusy"
+              aria-label="收藏"
+              @click="onFavoriteClick"
+            >
+              ★
+            </button>
+          </span>
         </div>
         <img
           v-if="article.cover_url"
@@ -101,13 +152,58 @@ export default {
 
 .detail__header {
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
   padding: 8px 12px;
   border-bottom: 1px solid var(--color-border);
 }
 
 .detail__back {
+  flex-shrink: 0;
+  min-width: 3.5rem;
   font-size: 1rem;
   color: var(--color-primary);
+}
+
+.detail__header-title {
+  flex: 1;
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+  padding-right: 3.5rem;
+}
+
+.detail__star {
+  flex-shrink: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.05);
+  color: #d0d0d0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  transition: color 0.15s ease;
+}
+
+.detail__star--inline {
+  width: 1.75rem;
+  height: 1.75rem;
+  margin-left: 0.25rem;
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+.detail__star--on {
+  color: #f5c518;
+  text-shadow: 0 0 4px rgba(245, 197, 24, 0.65);
+}
+
+.detail__star:disabled {
+  opacity: 0.6;
+}
+
+.detail__meta-views {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.125rem;
 }
 
 .detail__scroll {

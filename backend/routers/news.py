@@ -6,6 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from config.db_conf import get_db
 from crud import news as news_crud
 from crud import news_category as category_crud
+from dependencies.auth import get_optional_user
+from models.users import User
 from schemas.news import NewsCreate, NewsDetailData, NewsListPageData, NewsOut, NewsUpdate
 from schemas.news_category import NewsCategoryOut
 from schemas.response import ApiResponse
@@ -58,9 +60,16 @@ async def list_news(
 
 
 @router.get("/{news_id}", response_model=ApiResponse[NewsDetailData])
-async def get_news(news_id: int, db: AsyncSession = Depends(get_db)):
-    """GET /news/{id} — 正文、浏览量+1、相关推荐。"""
-    data = await news_crud.get_news_detail_with_related(db, news_id)
+async def get_news(
+    news_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User | None = Depends(get_optional_user),
+):
+    """GET /news/{id} — 正文、浏览量+1、相关推荐；登录时附带 isFavorited。"""
+    user_id = current_user.id if current_user else None
+    data = await news_crud.get_news_detail_with_related(
+        db, news_id, user_id=user_id
+    )
     if not data:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="资讯不存在")
     return success_response("success", data)

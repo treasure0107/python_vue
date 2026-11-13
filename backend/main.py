@@ -7,6 +7,7 @@ from config.db_conf import AsyncSessionLocal, Base, engine, settings
 from crud.news_category import ensure_default_categories
 import models  # noqa: F401
 from routers import auth as auth_router
+from routers import favorite as favorite_router
 from routers import news as news_router
 from routers import users as users_router
 from schemas.response import ApiResponse, RootMeta
@@ -48,6 +49,7 @@ app.add_middleware(
 )
 
 app.include_router(auth_router.router, prefix="/api")
+app.include_router(favorite_router.router, prefix="/api")
 app.include_router(users_router.router, prefix="/api")
 app.include_router(news_router.router, prefix="/api")
 

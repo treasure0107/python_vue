@@ -90,3 +90,4 @@ class NewsDetailData(BaseModel):
     category_id: int | None = None
     created_at: datetime | None = None
     relatedNews: list[NewsRelatedItem] = Field(default_factory=list)
+    isFavorited: bool = False  # 登录用户时由后端填入

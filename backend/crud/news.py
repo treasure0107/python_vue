@@ -280,9 +280,12 @@ async def list_news_cached(
 
 
 async def get_news_detail_with_related(
-    db: AsyncSession, news_id: int
+    db: AsyncSession,
+    news_id: int,
+    *,
+    user_id: int | None = None,
 ) -> NewsDetailData | None:
-    """详情：查新闻 → 浏览量+1 → 同分类相关推荐 → 更新详情缓存快照。"""
+    """详情：浏览量+1、相关推荐；传入 user_id 时填充 isFavorited。"""
     db_news = await get_news(db, news_id)
     if not db_news:
         return None
@@ -295,7 +298,12 @@ async def get_news_detail_with_related(
     )
     out = news_to_detail_data(db_news, related)
     news_cache.set_cached_news_detail(news_id, news_to_out(db_news))
-    return out
+    is_fav = False
+    if user_id is not None:
+        from crud import favorite as favorite_crud
+
+        is_fav = await favorite_crud.is_favorited(db, user_id, news_id)
+    return out.model_copy(update={"isFavorited": is_fav})
 
 
 async def get_news_detail_cached(db: AsyncSession, news_id: int) -> NewsOut | None:

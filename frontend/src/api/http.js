@@ -38,8 +38,21 @@ function unwrapApiPayload(payload) {
  * @param {object} [options]
  * @param {boolean} [options.requireAuth] 为 true 且无 token 时直接报错
  */
+const DEFAULT_TIMEOUT_MS = 20000
+
+function networkFriendlyError(error) {
+  if (error?.name === 'AbortError') {
+    return new Error('请求超时，请确认后端已启动（默认端口 8000）')
+  }
+  const msg = error?.message || ''
+  if (/fetch|network|failed|reset|refused/i.test(msg)) {
+    return new Error('无法连接服务，请确认后端已启动（默认端口 8000）')
+  }
+  return error instanceof Error ? error : new Error(String(error))
+}
+
 export async function apiRequest(path, options = {}) {
-  const { requireAuth = false, ...fetchOptions } = options
+  const { requireAuth = false, timeout = DEFAULT_TIMEOUT_MS, ...fetchOptions } = options
 
   if (requireAuth && !getToken()) {
     throw new Error('请先登录')
@@ -62,7 +75,21 @@ export async function apiRequest(path, options = {}) {
     body = JSON.stringify(body)
   }
 
-  const res = await fetch(`/api${path}`, { ...fetchOptions, headers, body })
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), timeout)
+  let res
+  try {
+    res = await fetch(`/api${path}`, {
+      ...fetchOptions,
+      headers,
+      body,
+      signal: controller.signal,
+    })
+  } catch (error) {
+    throw networkFriendlyError(error)
+  } finally {
+    clearTimeout(timer)
+  }
   const text = await res.text()
 
   if (res.status === 401) {

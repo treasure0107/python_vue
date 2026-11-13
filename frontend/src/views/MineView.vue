@@ -9,7 +9,7 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['login', 'register', 'logout', 'change-password'])
+const emit = defineEmits(['login', 'register', 'logout', 'change-password', 'favorites'])
 
 const avatarSrc = computed(
   () => (props.user?.avatar ? props.user.avatar : defaultAvatar),
@@ -62,7 +62,12 @@ const bioText = computed(() => props.user?.bio?.trim() || '')
             <span class="mine__chevron" aria-hidden="true">›</span>
           </button>
         </li>
-        <li class="mine__row mine__row--muted">我的收藏（即将上线）</li>
+        <li v-if="user">
+          <button type="button" class="mine__row" @click="emit('favorites')">
+            我的收藏
+            <span class="mine__chevron" aria-hidden="true">›</span>
+          </button>
+        </li>
         <li class="mine__row mine__row--muted">浏览历史（即将上线）</li>
       </ul>
     </div>
