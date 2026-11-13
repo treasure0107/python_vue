@@ -2,10 +2,9 @@
 统一 API 响应封装（工厂模式）。
 
 成功：{"code": 200, "message": "...", "data": ...}
-失败：由 exception_handlers 使用同一 envelope，data 为 null。
+失败：exception_handlers 使用 ApiResponseFactory.error_response
 
-data 支持 Pydantic、ORM、dict、list 等，经 jsonable_encoder 序列化。
-路由推荐：response_model=ApiResponse[T] + return success(data, message=...)
+路由层请统一：return success_response(message="...", data=业务 schemas 实例)
 """
 
 from __future__ import annotations
@@ -61,14 +60,14 @@ class ApiResponseFactory:
         code: int = 200,
         status_code: int | None = None,
     ) -> JSONResponse:
-        """
-        直接返回 JSONResponse（与课件 success_response 一致）。
-        未声明 response_model 的接口可使用。
-        """
-        content = ApiResponseFactory.success(data, message=message, code=code)
+        """课件标准：JSONResponse + jsonable_encoder 整包序列化。"""
+        content = ApiResponseFactory.envelope(code=code, message=message, data=data)
+        http_status = status_code
+        if http_status is None:
+            http_status = code if code in (200, 201) else 200
         return JSONResponse(
-            status_code=status_code if status_code is not None else code,
-            content=content,
+            status_code=http_status,
+            content=jsonable_encoder(content),
         )
 
     @staticmethod
@@ -81,20 +80,11 @@ class ApiResponseFactory:
     ) -> JSONResponse:
         """失败响应：生产环境 data 多为 null；DEBUG 时可附带排查信息。"""
         http_status = status_code if status_code is not None else code
+        content = ApiResponseFactory.envelope(code=code, message=message, data=data)
         return JSONResponse(
             status_code=http_status,
-            content=ApiResponseFactory.envelope(code=code, message=message, data=data),
+            content=jsonable_encoder(content),
         )
-
-
-# 路由层便捷函数（与课件命名一致）
-def success(
-    data: T | None = None,
-    *,
-    message: str = "操作成功",
-    code: int = 200,
-) -> dict[str, Any]:
-    return ApiResponseFactory.success(data, message=message, code=code)
 
 
 def success_response(
@@ -104,6 +94,20 @@ def success_response(
     code: int = 200,
     status_code: int | None = None,
 ) -> JSONResponse:
+    """
+    路由统一成功返回（与课件签名一致：message 在前）。
+    示例：return success_response("注册成功", data)
+    """
     return ApiResponseFactory.success_response(
         data, message=message, code=code, status_code=status_code
     )
+
+
+def success(
+    data: T | None = None,
+    *,
+    message: str = "操作成功",
+    code: int = 200,
+) -> JSONResponse:
+    """兼容旧写法 success(data, message=...) → 内部转 success_response。"""
+    return success_response(message=message, data=data, code=code)

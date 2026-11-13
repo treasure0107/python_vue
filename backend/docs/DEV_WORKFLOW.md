@@ -16,6 +16,6 @@
 
 4. **路由调 crud 并响应**  
    - 类型外壳：`schemas/response.py` → `ApiResponse[T]`（OpenAPI）  
-   - 构造工厂：`utils/response.py` → `success()` / `ApiResponseFactory`  
+   - 构造工厂：`utils/response.py` → **`return success_response("提示", data)`**（JSONResponse）  
    - 业务 data：各类 `schemas/*.py`（`ConfigDict(from_attributes=True)`）  
    - 统一异常：`utils/exception_handlers.py` → `register_exception_handlers(app)`（HTTP / 422 / IntegrityError / SQLAlchemy / 兜底）

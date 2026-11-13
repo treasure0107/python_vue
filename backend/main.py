@@ -9,8 +9,10 @@ import models  # noqa: F401
 from routers import auth as auth_router
 from routers import news as news_router
 from routers import users as users_router
+from schemas.response import ApiResponse, RootMeta
 from utils.exception_handlers import register_exception_handlers
 from utils.redis_cache import close_redis
+from utils.response import success_response
 
 
 @asynccontextmanager
@@ -50,6 +52,10 @@ app.include_router(users_router.router, prefix="/api")
 app.include_router(news_router.router, prefix="/api")
 
 
-@app.get("/")
+@app.get("/", response_model=ApiResponse[RootMeta])
 async def root():
-    return {"message": "头条资讯 API", "docs": "/docs"}
+    """根路径也使用统一 { code, message, data } 格式。"""
+    return success_response(
+        "success",
+        RootMeta(title=settings.app_title, docs="/docs", api_prefix="/api"),
+    )
