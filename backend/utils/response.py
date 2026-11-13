@@ -27,7 +27,7 @@ class ApiResponseFactory:
         if data is None:
             return None
         if isinstance(data, BaseModel):
-            return data.model_dump(mode="json")
+            return data.model_dump(mode="json", by_alias=True)
         return jsonable_encoder(data)
 
     @staticmethod

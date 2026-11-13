@@ -61,6 +61,17 @@
 
 ---
 
+## 浏览历史 `routers/history.py`（需 Bearer）
+
+| 方法 | 路径 | 说明 | data |
+|------|------|------|------|
+| POST | `/history/add` | 添加/更新浏览时间，`body: { newsId }` | `HistoryRecordOut`（`userId`、`newsId`、`viewTime`） |
+| GET | `/history/list` | `?page=&pageSize=` 联表分页 | `HistoryListPageData` |
+| DELETE | `/history/{history_id}` | 删除单条 | `null` |
+| DELETE | `/history` | 清空 | `HistoryClearData` |
+
+---
+
 ## 收藏 `routers/favorite.py`（需 Bearer）
 
 | 方法 | 路径 | 说明 | data |
@@ -92,3 +103,4 @@
 | `news` | `crud/news.py`, `crud/news_category.py`, `crud/news_cache.py` |
 | `users` | `crud/users.py` |
 | `favorites` | `crud/favorite.py` |
+| `history` | `crud/history.py` |

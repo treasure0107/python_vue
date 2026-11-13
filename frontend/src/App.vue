@@ -12,13 +12,15 @@ import LoginView from './views/LoginView.vue'
 import RegisterView from './views/RegisterView.vue'
 import ChangePasswordView from './views/ChangePasswordView.vue'
 import FavoritesView from './views/FavoritesView.vue'
+import HistoryView from './views/HistoryView.vue'
+import { addHistory } from './api/history'
 import AllCategoriesView from './views/AllCategoriesView.vue'
 import { fetchCurrentUser } from './api/auth'
 import { clearAuth, getStoredUser, loadAuth, saveAuth } from './utils/session'
 
 const activeTab = ref('home')
 const authScreen = ref(null)
-/** @type {import('vue').Ref<null | 'password' | 'favorites'>} */
+/** @type {import('vue').Ref<null | 'password' | 'favorites' | 'history'>} */
 const mineScreen = ref(null)
 const currentUser = ref(getStoredUser())
 const tabTitles = {
@@ -29,6 +31,7 @@ const tabTitles = {
   register: '用户注册',
   password: '修改密码',
   favorites: '我的收藏',
+  history: '浏览历史',
 }
 
 const pageTitle = computed(() => {
@@ -36,6 +39,7 @@ const pageTitle = computed(() => {
   if (activeTab.value === 'mine' && authScreen.value === 'register') return tabTitles.register
   if (activeTab.value === 'mine' && mineScreen.value === 'password') return tabTitles.password
   if (activeTab.value === 'mine' && mineScreen.value === 'favorites') return tabTitles.favorites
+  if (activeTab.value === 'mine' && mineScreen.value === 'history') return tabTitles.history
   return tabTitles[activeTab.value] || '新闻资讯'
 })
 
@@ -224,6 +228,9 @@ async function openDetail(id) {
   detailArticle.value = null
   try {
     detailArticle.value = await fetchNewsDetail(id)
+    if (isLoggedIn.value) {
+      addHistory(id).catch(() => {})
+    }
   } catch (e) {
     error.value = e.message || '详情加载失败'
     detailVisible.value = false
@@ -357,6 +364,20 @@ function openNewsFromFavorites(newsId) {
   openDetail(newsId)
 }
 
+function openHistory() {
+  if (!isLoggedIn.value) {
+    openLogin()
+    return
+  }
+  mineScreen.value = 'history'
+}
+
+function openNewsFromHistory(newsId) {
+  activeTab.value = 'home'
+  mineScreen.value = null
+  openDetail(newsId)
+}
+
 function onPasswordChanged() {
   mineScreen.value = null
 }
@@ -457,6 +478,11 @@ onUnmounted(() => {
         @back="closeMineSubScreen"
         @open-news="openNewsFromFavorites"
       />
+      <HistoryView
+        v-else-if="activeTab === 'mine' && mineScreen === 'history'"
+        @back="closeMineSubScreen"
+        @open-news="openNewsFromHistory"
+      />
       <MineView
         v-else-if="activeTab === 'mine'"
         class="news-app__mine"
@@ -466,6 +492,7 @@ onUnmounted(() => {
         @logout="onLogout"
         @change-password="openChangePassword"
         @favorites="openFavorites"
+        @history="openHistory"
       />
       </main>
     </template>

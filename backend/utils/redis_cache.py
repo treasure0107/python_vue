@@ -4,7 +4,7 @@ from typing import Any
 
 import redis
 
-from config.cache_conf import REDIS_DB, REDIS_ENABLED, REDIS_HOST, REDIS_PORT
+from config.cache_conf import REDIS_ENABLED, create_redis_client
 
 logger = logging.getLogger(__name__)
 
@@ -20,14 +20,7 @@ def get_redis() -> redis.Redis | None:
     if _client is not None:
         return _client
     try:
-        _client = redis.Redis(
-            host=REDIS_HOST,
-            port=REDIS_PORT,
-            db=REDIS_DB,
-            decode_responses=True,
-            socket_connect_timeout=0.3,
-            socket_timeout=0.3,
-        )
+        _client = create_redis_client()
         _client.ping()
         return _client
     except redis.RedisError as exc:

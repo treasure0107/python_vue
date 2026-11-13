@@ -29,7 +29,7 @@
 
 ---
 
-## 新功能自检清单（以「收藏」为例）
+## 新功能自检清单（以「收藏 / 浏览历史」为例）
 
 | 步骤 | 收藏模块落点 |
 |------|----------------|
@@ -41,6 +41,8 @@
 | 需登录 | `dependencies/auth.py` → `get_current_user` / `get_optional_user` |
 | 文档 | `docs/api_spec.md`、`docs/database_design.md` |
 | 前端 | `api/favorites.js`、`FavoritesView.vue`、`NewsDetail.vue` |
+| 浏览历史 | `crud/history.py`、`routers/history.py`；打开详情时 `POST /history/add` |
+| 历史前端 | `api/history.js`、`HistoryView.vue` |
 
 ---
 
